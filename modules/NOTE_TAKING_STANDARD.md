@@ -32,7 +32,7 @@ All notes must be structured using the following fields:
 | `phone` | Callback phone number |
 | `issue_summary` | Brief description of the caller's reason for contact (1–3 sentences) |
 | `action_taken` | What the agent did during the call (e.g., "attempted to book appointment", "escalated to human") |
-| `follow_up_required` | `Y` or `N` |
+| `follow_up_required` | `true` or `false` (boolean) |
 | `assigned_to` | <!-- CLIENT: insert default assignee or team name, e.g., "Front Desk Team" or "leave blank for auto-assign" --> |
 | `escalation_flag` | Classification flag for urgent or sensitive notes. Set when the note requires special routing. Enum values: `"abuse—tier1"`, `"abuse—tier2"`, `"fee-waiver-request"`, `"emergency-exception"`, `"security-incident"`, `"data-deletion-request"`, `"tool-failure"`, `"transfer-failed"` |
 

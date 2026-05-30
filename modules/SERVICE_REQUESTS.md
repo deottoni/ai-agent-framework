@@ -16,7 +16,7 @@ Promptly and accurately gather details for service requests while maintaining na
 
 ### FLOW
 1. **Open**
-   - Greeting: "Thanks for reaching {{organization_name}}. How can I assist you with your service request today?"
+   - Greeting: "Thanks for reaching out to {{organization_name}}. How can I assist you with your service request today?"
 
 2. **Clarify Service**
    - Ask clearly: "Can you describe the service you need or the problem you're experiencing?"

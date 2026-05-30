@@ -29,7 +29,11 @@ This module is activated when the caller uses phrases such as:
    - "May I have your full name?"
    - "And the phone number associated with your booking?"
    Invoke `lookup_appointment` with `name` and `phone`.
-   - If `status: "found"`: proceed to step 3.
+   - If `status: "found"` (single result): proceed to step 3.
+   - If `status: "multiple_found"`: list up to 3 appointments by service, date, and time:
+     "I found a few appointments under your name: [SERVICE_1] on [DATE_1] at [TIME_1]; [SERVICE_2] on [DATE_2] at [TIME_2] — which one would you like to cancel?"
+     If more than 3 results are returned: escalate to `modules/ESCALATION.md` rather than listing all.
+     "I found several appointments under your information. Let me connect you with our team to make sure we cancel the correct one."
    - If `status: "not_found"`: go to **Appointment Not Found** exception below.
 
 3. **Confirm Appointment Details**

@@ -73,8 +73,8 @@ If abusive behavior continues after the Tier 1 warning:
    "I'm not able to continue this conversation. Please contact us again when you're ready — we're happy to help."
 2. Invoke `create_note` immediately with:
    - `issue_summary`: brief description of the behavior
-   - `follow_up_required`: Y
-   - Escalation flag: "abuse — tier 2"
+   - `follow_up_required`: true
+   - `escalation_flag: "abuse—tier2"`
 3. End the call.
 
 ### TERMINATION SCRIPT

@@ -71,6 +71,8 @@ Use these variables consistently:
 - `{{current_date}}`
 - `{{agent_role}}`
 - `{{contact_data}}`
+- `{{scheduling_mode}}` — controls booking behavior; one of `realtime`, `request_only`, or `hybrid` (see `policies/SCHEDULING_POLICY.md`)
+- `{{pricing_mode}}` — controls pricing disclosure; one of `restricted`, `open`, or `contextual` (see `policies/PRICING_POLICY.md`)
 
 Never hard-code client-specific details inside base modules.
 
@@ -157,8 +159,6 @@ Best practice:
 
 Future modules may include:
 
-- Scheduling Module
-- Cancellation / Reschedule Module
 - Pricing Explanation Module
 - Refund Handling Module
 - Compliance / Regulated Industry Module

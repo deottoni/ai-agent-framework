@@ -14,6 +14,7 @@ Look up the caller's existing appointment, verify their identity, confirm the cu
 - Never modify an appointment without confirming the existing booking details first.
 - Never invent availability — all rescheduling is confirmed by the `reschedule_appointment` tool.
 - Check `policies/CANCELLATION_RESCHEDULE_POLICY.md` for the reschedule window before proceeding.
+- **Mode check:** If `{{scheduling_mode}}` is `request_only`, do not invoke `reschedule_appointment`. Instead, collect the caller's requested new date and time, invoke `create_note` with all details and `follow_up_required: true`, and say: "I've noted your reschedule request — our team will confirm the new time with you directly."
 
 ### TRIGGERS
 This module is activated when the caller uses phrases such as:

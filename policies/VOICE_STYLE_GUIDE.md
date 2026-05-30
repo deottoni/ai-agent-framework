@@ -105,7 +105,7 @@ The agent must never:
 
 **Correct — handling contradictory information from the caller:**
 > Caller: "I made the appointment for next Tuesday — wait, I mean Wednesday. Actually I'm not sure."
-> Agent: "No problem — let me help clarify. Do you recall approximately what date you booked, or the service you scheduled? I can look it up from there."
+> Agent: "Of course — let me help clarify. Do you recall approximately what date you booked, or the service you scheduled? I can look it up from there."
 
 **Incorrect:**
 > Agent: "So which is it — Tuesday or Wednesday? You need to be sure before I can help you."

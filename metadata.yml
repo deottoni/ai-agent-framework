@@ -1,8 +1,28 @@
-owner: ""
-version: "1.0.0"
+owner: "Andre Ottoni"
+version: "1.1.0"
 created: "2026-02-26"
-last_updated: "2026-02-26"
+last_updated: "2026-05-30"
 description: "AI Agent Prompt Framework"
-modules: []
-policies: []
-tools: []
+modules:
+  - "modules/CANCEL_APPOINTMENT.md"
+  - "modules/CUSTOMER_SUPPORT.md"
+  - "modules/ESCALATION.md"
+  - "modules/INTENT_ROUTING.md"
+  - "modules/NOTE_TAKING_STANDARD.md"
+  - "modules/RECEPTIONIST.md"
+  - "modules/RESCHEDULE_APPOINTMENT.md"
+  - "modules/SALES_MODULE.md"
+  - "modules/SCHEDULING_NEW_APPOINTMENT.md"
+  - "modules/SERVICE_REQUESTS.md"
+policies:
+  - "policies/ABUSE_OFFTOPIC_POLICY.md"
+  - "policies/CANCELLATION_RESCHEDULE_POLICY.md"
+  - "policies/PAYMENTS_POLICY.md"
+  - "policies/PRICING_POLICY.md"
+  - "policies/PRIVACY_SECURITY_POLICY.md"
+  - "policies/SCHEDULING_POLICY.md"
+  - "policies/VOICE_STYLE_GUIDE.md"
+tools:
+  - "tools/TOOL_CONTRACTS.md"
+  - "tools/TOOL_ERROR_HANDLING.md"
+  - "tools/TOOL_USAGE_RULES.md"
