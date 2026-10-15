@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent Prompt Framework</title>
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #101010;
+      --surface-2: #181818;
+      --surface-3: #202020;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --accent: #6366f1;
+      --accent-dim: rgba(99,102,241,0.15);
+      --accent-glow: rgba(99,102,241,0.3);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.12);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.12);
+      --rose: #f43f5e;
+      --rose-dim: rgba(244,63,94,0.12);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56,189,248,0.12);
+      --violet: #a78bfa;
+      --violet-dim: rgba(167,139,250,0.12);
+      --text: #e8e8e8;
+      --text-muted: #666;
+      --text-dim: #999;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+
+    /* ─── LAYOUT ─── */
+    .shell {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-logo .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .sidebar-logo h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.01em;
+      line-height: 1.3;
+    }
+
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 8px 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: 450;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+
+    .nav-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .nav-item .nav-icon { font-size: 14px; flex-shrink: 0; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px;
+      background: var(--surface-3);
+      padding: 1px 6px;
+      border-radius: 999px;
+      color: var(--text-muted);
+    }
+
+    .nav-item.active .nav-badge {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* ─── MAIN ─── */
+    .main {
+      overflow-y: auto;
+      min-height: 100vh;
+    }
+
+    /* ─── TOP BAR ─── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .topbar-breadcrumb span:last-child { color: var(--text); }
+    .topbar-sep { opacity: 0.4; }
+
+    .version-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .version-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* ─── PAGE CONTENT ─── */
+    .page { display: none; padding: 32px; max-width: 1100px; }
+    .page.active { display: block; }
+
+    /* ─── HERO ─── */
+    .hero {
+      margin-bottom: 40px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(99,102,241,0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .hero h2 span {
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    /* ─── STATS ROW ─── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .stat-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+      opacity: 0.8;
+    }
+
+    /* ─── SECTION TITLES ─── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─── CARDS GRID ─── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card.role::before { background: radial-gradient(ellipse at top left, var(--accent-dim), transparent 60%); }
+    .card.functional::before { background: radial-gradient(ellipse at top left, var(--sky-dim), transparent 60%); }
+    .card.policy::before { background: radial-gradient(ellipse at top left, var(--amber-dim), transparent 60%); }
+    .card.tool::before { background: radial-gradient(ellipse at top left, var(--green-dim), transparent 60%); }
+    .card.core::before { background: radial-gradient(ellipse at top left, var(--violet-dim), transparent 60%); }
+
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .tag-role { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(99,102,241,0.2); }
+    .tag-functional { background: var(--sky-dim); color: var(--sky); border: 1px solid rgba(56,189,248,0.2); }
+    .tag-policy { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+    .tag-tool { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .tag-core { background: var(--violet-dim); color: var(--violet); border: 1px solid rgba(167,139,250,0.2); }
+    .tag-required { background: var(--rose-dim); color: var(--rose); border: 1px solid rgba(244,63,94,0.2); }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-file {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      opacity: 0.6;
+    }
+
+    .card-arrow {
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+
+    .card:hover .card-arrow { transform: translateX(3px); color: var(--text); }
+
+    /* ─── FLOW DIAGRAM ─── */
+    .flow {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 40px;
+    }
+
+    .flow-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .flow-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid rgba(99,102,241,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .flow-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .flow-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .flow-arrow {
+      font-size: 16px;
+      color: var(--border-hover);
+      flex-shrink: 0;
+      margin-top: -14px;
+    }
+
+    /* ─── INTENT GRID ─── */
+    .intent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .intent-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: var(--transition);
+    }
+
+    .intent-chip:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface-2); }
+
+    .intent-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── TOOL TABLE ─── */
+    .tool-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .tool-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tool-table th {
+      background: var(--surface-2);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tool-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .tool-table tr:last-child td { border-bottom: none; }
+    .tool-table tr:hover td { background: var(--surface-2); }
+
+    .tool-name {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    .effect-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .effect-side { background: var(--rose-dim); color: var(--rose); border: 1px solid rgba(244,63,94,0.2); }
+    .effect-read { background: var(--sky-dim); color: var(--sky); border: 1px solid rgba(56,189,248,0.2); }
+
+    /* ─── VARIABLES ─── */
+    .var-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .var-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      transition: var(--transition);
+    }
+
+    .var-card:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+    .var-name {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .var-desc { font-size: 12px; color: var(--text-muted); }
+
+    .var-req {
+      display: inline-flex;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 999px;
+      margin-top: 6px;
+    }
+
+    .req-required { background: var(--rose-dim); color: var(--rose); }
+    .req-recommended { background: var(--amber-dim); color: var(--amber); }
+    .req-optional { background: var(--surface-3); color: var(--text-muted); }
+
+    /* ─── CHECKLIST ─── */
+    .checklist {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .check-item:last-child { border-bottom: none; }
+    .check-item:hover { opacity: 0.8; }
+
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border-hover);
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .check-item.checked .check-box {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .check-checkmark { display: none; font-size: 11px; }
+    .check-item.checked .check-checkmark { display: block; }
+
+    .check-text { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+    .check-item.checked .check-text { color: var(--text-muted); text-decoration: line-through; }
+
+    /* ─── MODES TABLE ─── */
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      transition: var(--transition);
+    }
+
+    .mode-card:hover { border-color: var(--border-hover); background: var(--surface-2); }
+
+    .mode-label {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .mode-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .mode-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      padding: 40px 20px;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 680px;
+      padding: 32px;
+      animation: modal-in 0.2s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover { background: var(--surface-3); color: var(--text); }
+
+    .modal-tag { margin-bottom: 14px; }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .modal-file {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      opacity: 0.6;
+    }
+
+    .modal-section {
+      margin-bottom: 20px;
+    }
+
+    .modal-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-text {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    .modal-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .modal-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .modal-list li::before {
+      content: '→';
+      color: var(--accent);
+      flex-shrink: 0;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .modal-code {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--green);
+      line-height: 1.6;
+    }
+
+    /* ─── SEARCH ─── */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      margin-bottom: 24px;
+      transition: var(--transition);
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .search-bar input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .search-bar input::placeholder { color: var(--text-muted); }
+    .search-icon { color: var(--text-muted); font-size: 14px; }
+
+    /* ─── ESCALATION TIERS ─── */
+    .tier-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .tier {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .tier-1 { border-left-color: var(--amber); }
+    .tier-2 { border-left-color: var(--rose); }
+
+    .tier-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .tier-1 .tier-label { background: var(--amber-dim); color: var(--amber); }
+    .tier-2 .tier-label { background: var(--rose-dim); color: var(--rose); }
+
+    .tier-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .modes-grid { grid-template-columns: 1fr; }
+      .flow-steps { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── ANIMATIONS ─── */
+    .fade-in { animation: fade-in 0.3s ease; }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ─── SIDEBAR ─── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">⬡</div>
+      <h1>AI Agent Framework</h1>
+      <p>v1.0.0 · Andre Ottoni</p>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Overview</div>
+      <button class="nav-item active" onclick="navigate('overview', this)">
+        <span class="nav-icon">◈</span> Overview
+      </button>
+      <button class="nav-item" onclick="navigate('assembly', this)">
+        <span class="nav-icon">⚙</span> Assembly Guide
+      </button>
+      <button class="nav-item" onclick="navigate('variables', this)">
+        <span class="nav-icon">{}</span> Variables
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Modules</div>
+      <button class="nav-item" onclick="navigate('modules-role', this)">
+        <span class="nav-icon">◎</span> Role Modules
+        <span class="nav-badge">4</span>
+      </button>
+      <button class="nav-item" onclick="navigate('modules-functional', this)">
+        <span class="nav-icon">◉</span> Functional
+        <span class="nav-badge">6</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Policies</div>
+      <button class="nav-item" onclick="navigate('policies', this)">
+        <span class="nav-icon">◷</span> All Policies
+        <span class="nav-badge">7</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="nav-item" onclick="navigate('tools', this)">
+        <span class="nav-icon">◈</span> Tool Contracts
+        <span class="nav-badge">7</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Deploy</div>
+      <button class="nav-item" onclick="navigate('checklist', this)">
+        <span class="nav-icon">✓</span> Pre-Deploy
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>ai-agent-framework</span>
+        <span class="topbar-sep">/</span>
+        <span id="breadcrumb-current">Overview</span>
+      </div>
+      <div class="version-badge">
+        <div class="version-dot pulse"></div>
+        <span>Production Ready</span>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: OVERVIEW ═══ -->
+    <div id="page-overview" class="page active fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">⬡ Prompt Library</div>
+        <h2>AI Agent <span>Prompt Framework</span></h2>
+        <p>A modular, production-ready prompt library for deploying AI voice and chat agents across sales, support, reception, and service use cases — assembled from reusable, client-configurable components.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon">◎</div>
+          <div class="stat-value">10</div>
+          <div class="stat-label">Prompt Modules</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">◷</div>
+          <div class="stat-value">7</div>
+          <div class="stat-label">Policy Files</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">◈</div>
+          <div class="stat-value">7</div>
+          <div class="stat-label">Tool Contracts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">{}</div>
+          <div class="stat-value">7</div>
+          <div class="stat-label">Config Variables</div>
+        </div>
+      </div>
+
+      <div class="section-title">Conversation Flow</div>
+
+      <div class="flow" style="margin-bottom:40px;">
+        <div class="flow-title">⚡ Entry Point — INTENT_ROUTING runs on every turn</div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-name">Receive</div>
+            <div class="flow-sub">Caller input</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-name">Classify</div>
+            <div class="flow-sub">INTENT_ROUTING</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-name">Route</div>
+            <div class="flow-sub">To module</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-name">Collect</div>
+            <div class="flow-sub">Required fields</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">5</div>
+            <div class="flow-name">Confirm</div>
+            <div class="flow-sub">With caller</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">6</div>
+            <div class="flow-name">Invoke</div>
+            <div class="flow-sub">Tool call</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num">7</div>
+            <div class="flow-name">Report</div>
+            <div class="flow-sub">Result to caller</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Intent Categories</div>
+
+      <div class="intent-grid">
+        <div class="intent-chip"><div class="intent-dot" style="background:#6366f1"></div> new_inquiry</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#22c55e"></div> sales</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#38bdf8"></div> customer_support</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#a78bfa"></div> schedule_new</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#f59e0b"></div> reschedule</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#f43f5e"></div> cancel</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#38bdf8"></div> service_request</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#6366f1"></div> general_question</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#22c55e"></div> speak_to_human</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#f59e0b"></div> no_show_follow_up</div>
+        <div class="intent-chip"><div class="intent-dot" style="background:#f43f5e"></div> out_of_scope</div>
+      </div>
+
+      <div class="section-title">Core Design Principles</div>
+
+      <div class="cards-grid">
+        <div class="card core" onclick="openModal('principle-modular')">
+          <div class="card-tag tag-core">Architecture</div>
+          <div class="card-title">Modular & Swappable</div>
+          <div class="card-desc">Each component is independently replaceable. Change one module without affecting others — designed for rapid client customization.</div>
+          <div class="card-footer"><span class="card-file">assembly-driven</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card core" onclick="openModal('principle-safety')">
+          <div class="card-tag tag-core">Safety</div>
+          <div class="card-title">Zero Hallucination Policy</div>
+          <div class="card-desc">Agent reads only from configured data. Never infer success from silence — explicit confirmation required for every tool invocation.</div>
+          <div class="card-footer"><span class="card-file">guardrails enforced</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card core" onclick="openModal('principle-degradation')">
+          <div class="card-tag tag-core">Reliability</div>
+          <div class="card-title">Graceful Degradation</div>
+          <div class="card-desc">Every tool failure has a fallback path. The cascade ensures callers are never left without a resolution path even under complete tool failure.</div>
+          <div class="card-footer"><span class="card-file">tool → note → transfer</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card core" onclick="openModal('principle-rag')">
+          <div class="card-tag tag-core">Integration</div>
+          <div class="card-title">RAG-Friendly Structure</div>
+          <div class="card-desc">Each .md file is a standalone retrieval chunk. Supports programmatic assembly and LLM context injection without restructuring.</div>
+          <div class="card-footer"><span class="card-file">vector-ready</span><span class="card-arrow">→</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: ASSEMBLY ═══ -->
+    <div id="page-assembly" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">⚙ Build Guide</div>
+        <h2>Assembly <span>Guide</span></h2>
+        <p>Every agent is assembled in a strict 5-layer order. Follow this sequence to ensure consistent, correct behavior across all deployments.</p>
+      </div>
+
+      <div class="section-title">Assembly Order</div>
+
+      <div class="flow" style="margin-bottom:24px;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--accent)">
+            <div class="flow-num" style="flex-shrink:0">1</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">SYSTEM_INSTRUCTIONS.md</div>
+              <div style="font-size:12px;color:var(--text-muted);">Always required — base layer for every agent. Defines role, communication style, guardrails.</div>
+            </div>
+            <div style="margin-left:auto"><span class="card-tag tag-required" style="margin:0">Required</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--accent)">
+            <div class="flow-num" style="flex-shrink:0;background:var(--accent-dim);border-color:rgba(99,102,241,.3)">2</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">Role Module <span style="color:var(--text-muted);font-weight:400">(pick exactly one)</span></div>
+              <div style="font-size:12px;color:var(--text-muted);">RECEPTIONIST · SALES_MODULE · CUSTOMER_SUPPORT · SERVICE_REQUESTS</div>
+            </div>
+            <div style="margin-left:auto"><span class="card-tag tag-required" style="margin:0">Required</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--sky)">
+            <div class="flow-num" style="flex-shrink:0;background:var(--sky-dim);border-color:rgba(56,189,248,.3);color:var(--sky)">3</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">Functional Modules <span style="color:var(--text-muted);font-weight:400">(include all that apply)</span></div>
+              <div style="font-size:12px;color:var(--text-muted);">INTENT_ROUTING · NOTE_TAKING · ESCALATION · SCHEDULING · RESCHEDULE · CANCEL</div>
+            </div>
+            <div style="margin-left:auto"><span class="card-tag tag-functional" style="margin:0">As needed</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--amber)">
+            <div class="flow-num" style="flex-shrink:0;background:var(--amber-dim);border-color:rgba(245,158,11,.3);color:var(--amber)">4</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">Policies <span style="color:var(--text-muted);font-weight:400">(include all that apply)</span></div>
+              <div style="font-size:12px;color:var(--text-muted);">SCHEDULING · CANCELLATION · PRICING · PAYMENTS · PRIVACY · VOICE_STYLE · ABUSE</div>
+            </div>
+            <div style="margin-left:auto"><span class="card-tag tag-policy" style="margin:0">As needed</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--green)">
+            <div class="flow-num" style="flex-shrink:0;background:var(--green-dim);border-color:rgba(34,197,94,.3);color:var(--green)">5</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">Tool Contracts</div>
+              <div style="font-size:12px;color:var(--text-muted);">TOOL_CONTRACTS · TOOL_USAGE_RULES · TOOL_ERROR_HANDLING</div>
+            </div>
+            <div style="margin-left:auto"><span class="card-tag tag-tool" style="margin:0">Required</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Scheduling Modes</div>
+
+      <div class="modes-grid" style="margin-bottom:40px;">
+        <div class="mode-card">
+          <div class="mode-label">realtime</div>
+          <div class="mode-title">Live Booking</div>
+          <div class="mode-desc">Invokes book_appointment in-call. Only confirms with a valid confirmation_id returned by the tool.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-label">request_only</div>
+          <div class="mode-title">Manual Queue</div>
+          <div class="mode-desc">Never invokes booking tool. Collects fields and logs via create_note. Human team books manually afterward.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-label">hybrid</div>
+          <div class="mode-title">Best Effort</div>
+          <div class="mode-desc">Attempts realtime first. Falls back to request_only on any tool failure — seamless for the caller.</div>
+        </div>
+      </div>
+
+      <div class="section-title">Pricing Modes</div>
+
+      <div class="modes-grid">
+        <div class="mode-card">
+          <div class="mode-label">restricted</div>
+          <div class="mode-title">No Quotes</div>
+          <div class="mode-desc">Never quote any price. Uses a redirect script to defer all pricing questions to the team.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-label">open</div>
+          <div class="mode-title">Listed Prices</div>
+          <div class="mode-desc">Quote only prices explicitly listed in the policy file. No estimates beyond what is documented.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-label">contextual</div>
+          <div class="mode-title">Range Sharing</div>
+          <div class="mode-desc">Share authorized price range if available. Otherwise fall back to the redirect script.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: VARIABLES ═══ -->
+    <div id="page-variables" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">{} Variables</div>
+        <h2>Config <span>Variables</span></h2>
+        <p>These mustache-style variables must be replaced with real values before deployment. Required variables must always be set; others are context-dependent.</p>
+      </div>
+
+      <div class="section-title">Deployment Variables</div>
+
+      <div class="var-grid">
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;organization_name&#125;&#125;</div>
+          <div class="var-desc">Client business name — used in greetings and references throughout the conversation.</div>
+          <div><span class="var-req req-required">Required</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;agent_role&#125;&#125;</div>
+          <div class="var-desc">Agent role identifier, e.g. "Receptionist", "Sales Agent", "Support Rep".</div>
+          <div><span class="var-req req-required">Required</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;scheduling_mode&#125;&#125;</div>
+          <div class="var-desc">realtime / request_only / hybrid — required whenever scheduling modules are included.</div>
+          <div><span class="var-req req-required">Required if scheduling</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;pricing_mode&#125;&#125;</div>
+          <div class="var-desc">restricted / open / contextual — required when pricing questions may arise.</div>
+          <div><span class="var-req req-required">Required if pricing</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;industry&#125;&#125;</div>
+          <div class="var-desc">Industry context for tone and framing, e.g. "home services", "healthcare", "legal".</div>
+          <div><span class="var-req req-recommended">Recommended</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;current_date&#125;&#125;</div>
+          <div class="var-desc">Today's date — injected at runtime to support date-relative scheduling logic.</div>
+          <div><span class="var-req req-recommended">Recommended</span></div>
+        </div>
+        <div class="var-card">
+          <div class="var-name">&#123;&#123;contact_data&#125;&#125;</div>
+          <div class="var-desc">Business contact info — phone, email, address — used in escalation and fallback scripts.</div>
+          <div><span class="var-req req-optional">Optional</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: ROLE MODULES ═══ -->
+    <div id="page-modules-role" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">◎ Modules</div>
+        <h2>Role <span>Modules</span></h2>
+        <p>Pick exactly one role module per deployment. Each module defines the agent's primary persona, goals, and behavior pattern for that role.</p>
+      </div>
+
+      <div class="section-title">Pick Exactly One</div>
+
+      <div class="cards-grid">
+        <div class="card role" onclick="openModal('role-receptionist')">
+          <div class="card-tag tag-role">Role</div>
+          <div class="card-title">Receptionist</div>
+          <div class="card-desc">General greeting, caller triage, and message-taking. Routes callers to the right department or documents requests for follow-up.</div>
+          <div class="card-footer"><span class="card-file">RECEPTIONIST.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card role" onclick="openModal('role-sales')">
+          <div class="card-tag tag-role">Role</div>
+          <div class="card-title">Sales Agent</div>
+          <div class="card-desc">Lead qualification, product interest identification, timeline and budget discovery, and next-step routing for warm leads.</div>
+          <div class="card-footer"><span class="card-file">SALES_MODULE.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card role" onclick="openModal('role-support')">
+          <div class="card-tag tag-role">Role</div>
+          <div class="card-title">Customer Support</div>
+          <div class="card-desc">Issue resolution, escalation procedures, and sensitive issue handling. Balances empathy with policy compliance.</div>
+          <div class="card-footer"><span class="card-file">CUSTOMER_SUPPORT.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card role" onclick="openModal('role-service')">
+          <div class="card-tag tag-role">Role</div>
+          <div class="card-title">Service Requests</div>
+          <div class="card-desc">Field service intake — collects service type, location, urgency, and contact details. Documents requests for dispatch teams.</div>
+          <div class="card-footer"><span class="card-file">SERVICE_REQUESTS.md</span><span class="card-arrow">→</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: FUNCTIONAL MODULES ═══ -->
+    <div id="page-modules-functional" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">◉ Functional</div>
+        <h2>Functional <span>Modules</span></h2>
+        <p>Include all functional modules that apply to your deployment. These handle specific conversation behaviors that can appear in any role context.</p>
+      </div>
+
+      <div class="section-title">Cross-Cutting Behaviors</div>
+
+      <div class="cards-grid">
+        <div class="card functional" onclick="openModal('func-intent')">
+          <div class="card-tag tag-functional">Routing</div>
+          <div class="card-title">Intent Routing</div>
+          <div class="card-desc">Runs on every conversation turn. Classifies caller intent from 11 categories and routes to the correct module. Entry point for all logic.</div>
+          <div class="card-footer"><span class="card-file">INTENT_ROUTING.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card functional" onclick="openModal('func-escalation')">
+          <div class="card-tag tag-functional">Safety</div>
+          <div class="card-title">Escalation</div>
+          <div class="card-desc">Defines triggers (billing disputes, legal threats, abuse, emergencies) and the full escalation procedure including emergency override logic.</div>
+          <div class="card-footer"><span class="card-file">ESCALATION.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card functional" onclick="openModal('func-notes')">
+          <div class="card-tag tag-functional">Logging</div>
+          <div class="card-title">Note Taking</div>
+          <div class="card-desc">Cross-cutting standard for logging unresolved requests. Defines required fields, optional fields, and all escalation flag values.</div>
+          <div class="card-footer"><span class="card-file">NOTE_TAKING_STANDARD.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card functional" onclick="openModal('func-scheduling')">
+          <div class="card-tag tag-functional">Scheduling</div>
+          <div class="card-title">New Appointment</div>
+          <div class="card-desc">Collects service type, preferred date/time, and contact info. Supports all three scheduling modes with mode-specific booking flows.</div>
+          <div class="card-footer"><span class="card-file">SCHEDULING_NEW_APPOINTMENT.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card functional" onclick="openModal('func-reschedule')">
+          <div class="card-tag tag-functional">Scheduling</div>
+          <div class="card-title">Reschedule</div>
+          <div class="card-desc">Looks up existing appointment, validates the reschedule window against policy, confirms new time with caller, and invokes reschedule tool.</div>
+          <div class="card-footer"><span class="card-file">RESCHEDULE_APPOINTMENT.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card functional" onclick="openModal('func-cancel')">
+          <div class="card-tag tag-functional">Scheduling</div>
+          <div class="card-title">Cancel Appointment</div>
+          <div class="card-desc">Looks up appointment, informs caller of cancellation policy and any applicable fees, offers reschedule first, then processes cancellation.</div>
+          <div class="card-footer"><span class="card-file">CANCEL_APPOINTMENT.md</span><span class="card-arrow">→</span></div>
+        </div>
+      </div>
+
+      <div class="section-title">Escalation Tiers</div>
+
+      <div class="tier-list">
+        <div class="tier tier-1">
+          <span class="tier-label">Tier 1</span>
+          <div class="tier-desc">Warning issued. Interaction documented with <code style="font-family:monospace;font-size:11px;color:var(--amber)">abuse-tier1</code> flag. Agent continues conversation with heightened caution and reduced scope.</div>
+        </div>
+        <div class="tier tier-2">
+          <span class="tier-label">Tier 2</span>
+          <div class="tier-desc">Conversation terminated. Note created with <code style="font-family:monospace;font-size:11px;color:var(--rose)">abuse-tier2</code> flag. Transfer attempted; if unavailable, callback is promised and call ends.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: POLICIES ═══ -->
+    <div id="page-policies" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">◷ Policies</div>
+        <h2>Business <span>Policies</span></h2>
+        <p>Client-configurable business rules that govern agent behavior. Include all policies relevant to the deployment context.</p>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-icon">⌕</span>
+        <input type="text" placeholder="Search policies..." oninput="filterCards(this.value, 'policies-grid')" />
+      </div>
+
+      <div class="section-title">All Policies</div>
+
+      <div class="cards-grid" id="policies-grid">
+        <div class="card policy" data-search="scheduling booking appointments" onclick="openModal('policy-scheduling')">
+          <div class="card-tag tag-policy">Scheduling</div>
+          <div class="card-title">Scheduling Policy</div>
+          <div class="card-desc">Booking windows, advance notice requirements, same-day booking rules, conflict handling, and holiday blackouts.</div>
+          <div class="card-footer"><span class="card-file">SCHEDULING_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="cancellation reschedule fees late no-show" onclick="openModal('policy-cancellation')">
+          <div class="card-tag tag-policy">Cancellation</div>
+          <div class="card-title">Cancellation & Reschedule</div>
+          <div class="card-desc">Cancellation windows, late fees, no-show fees, reschedule windows, emergency exceptions, and fee waiver authority.</div>
+          <div class="card-footer"><span class="card-file">CANCELLATION_RESCHEDULE_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="pricing quotes price discount promotion" onclick="openModal('policy-pricing')">
+          <div class="card-tag tag-policy">Pricing</div>
+          <div class="card-title">Pricing Policy</div>
+          <div class="card-desc">Pricing modes (restricted/open/contextual), redirect scripts, discount and promotion rules, and prohibited pricing behaviors.</div>
+          <div class="card-footer"><span class="card-file">PRICING_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="payments methods refund dispute card" onclick="openModal('policy-payments')">
+          <div class="card-tag tag-policy">Payments</div>
+          <div class="card-title">Payments Policy</div>
+          <div class="card-desc">Payment methods, capture rules (agent never handles card data), refund policy, and dispute escalation procedures.</div>
+          <div class="card-footer"><span class="card-file">PAYMENTS_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="privacy pii data security compliance gdpr" onclick="openModal('policy-privacy')">
+          <div class="card-tag tag-policy">Privacy</div>
+          <div class="card-title">Privacy & Security</div>
+          <div class="card-desc">Authorized PII collection, identity verification procedures, restricted data types (SSN, card numbers), and compliance frameworks.</div>
+          <div class="card-footer"><span class="card-file">PRIVACY_SECURITY_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="voice style tone language phrases" onclick="openModal('policy-voice')">
+          <div class="card-tag tag-policy">Style</div>
+          <div class="card-title">Voice Style Guide</div>
+          <div class="card-desc">Tone principles, speaking pace, prohibited phrases with approved replacements, empathy guidelines, and voice-optimized date/time formatting.</div>
+          <div class="card-footer"><span class="card-file">VOICE_STYLE_GUIDE.md</span><span class="card-arrow">→</span></div>
+        </div>
+        <div class="card policy" data-search="abuse offtopic harassment injection" onclick="openModal('policy-abuse')">
+          <div class="card-tag tag-policy">Safety</div>
+          <div class="card-title">Abuse & Off-Topic</div>
+          <div class="card-desc">Off-topic request handling, two-tier abuse escalation, and prompt-injection defense mechanisms.</div>
+          <div class="card-footer"><span class="card-file">ABUSE_OFFTOPIC_POLICY.md</span><span class="card-arrow">→</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: TOOLS ═══ -->
+    <div id="page-tools" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">◈ Tools</div>
+        <h2>Tool <span>Contracts</span></h2>
+        <p>Formal behavioral contracts for all 7 standard tools. Every tool has a defined type, invocation sequence, confirmation requirement, and error handling path.</p>
+      </div>
+
+      <div class="section-title">Standard Tool Invocation Pattern</div>
+
+      <div class="flow" style="margin-bottom:32px;">
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-num" style="background:var(--sky-dim);border-color:rgba(56,189,248,.3);color:var(--sky)">1</div>
+            <div class="flow-name">Collect</div>
+            <div class="flow-sub">Gather all fields</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:var(--amber-dim);border-color:rgba(245,158,11,.3);color:var(--amber)">2</div>
+            <div class="flow-name">Confirm</div>
+            <div class="flow-sub">Read back to caller</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:var(--green-dim);border-color:rgba(34,197,94,.3);color:var(--green)">3</div>
+            <div class="flow-name">Invoke</div>
+            <div class="flow-sub">Call the tool</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-num" style="background:var(--violet-dim);border-color:rgba(167,139,250,.3);color:var(--violet)">4</div>
+            <div class="flow-name">Report</div>
+            <div class="flow-sub">Inform caller of result</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Tool Reference</div>
+
+      <div class="tool-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool Name</th>
+              <th>Type</th>
+              <th>Returns</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tool-name">lookup_appointment</span></td>
+              <td><span class="effect-badge effect-read">Read-only</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">appointment record</td>
+              <td style="font-size:12px">Find existing appointment by name + phone. May be called silently.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">book_appointment</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">confirmation_id</td>
+              <td style="font-size:12px">Create new booking. Requires explicit caller confirmation. Only confirm with valid confirmation_id.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">reschedule_appointment</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">updated_record</td>
+              <td style="font-size:12px">Move appointment to new date/time. Requires existing appointment lookup first.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">cancel_appointment</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">cancellation_status</td>
+              <td style="font-size:12px">Cancel booking. May apply fee per policy. Offer reschedule before confirming cancellation.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">create_note</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">note_id</td>
+              <td style="font-size:12px">Log structured note for team follow-up. Primary fallback for all tool failures.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">transfer_call</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">transfer_status</td>
+              <td style="font-size:12px">Transfer to human agent or department. Used for escalation and emergency override.</td>
+            </tr>
+            <tr>
+              <td><span class="tool-name">send_confirmation</span></td>
+              <td><span class="effect-badge effect-side">Side-effect</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">delivery_status</td>
+              <td style="font-size:12px">Send SMS/email confirmation. Handles delivery failure — never assume success without status flag.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Error Handling Cascade</div>
+
+      <div class="tier-list">
+        <div class="tier" style="border-left-color:var(--sky)">
+          <span class="tier-label" style="background:var(--sky-dim);color:var(--sky);white-space:nowrap">Step 1</span>
+          <div class="tier-desc">Tool invocation fails → Attempt <code style="font-family:monospace;font-size:11px;color:var(--green)">create_note</code> to log caller info and issue. Promise team follow-up.</div>
+        </div>
+        <div class="tier" style="border-left-color:var(--amber)">
+          <span class="tier-label" style="background:var(--amber-dim);color:var(--amber);white-space:nowrap">Step 2</span>
+          <div class="tier-desc">create_note also fails → Attempt <code style="font-family:monospace;font-size:11px;color:var(--green)">transfer_call</code> to a human agent who can assist directly.</div>
+        </div>
+        <div class="tier" style="border-left-color:var(--rose)">
+          <span class="tier-label" style="background:var(--rose-dim);color:var(--rose);white-space:nowrap">Step 3</span>
+          <div class="tier-desc">transfer_call also fails → Read back caller info verbally. Provide fallback contact number. Apologize and end call gracefully.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════ PAGE: CHECKLIST ═══ -->
+    <div id="page-checklist" class="page fade-in">
+
+      <div class="hero">
+        <div class="hero-eyebrow">✓ Deploy</div>
+        <h2>Pre-Deploy <span>Checklist</span></h2>
+        <p>Complete all items before deploying any agent to production. Click each item to mark it as done.</p>
+      </div>
+
+      <div class="section-title">Variables & Configuration</div>
+
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">All <code style="font-family:monospace;font-size:11px">&#123;&#123;variable&#125;&#125;</code> placeholders replaced with real deployment values</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">scheduling_mode set to: realtime, request_only, or hybrid</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">pricing_mode set to: restricted, open, or contextual</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">organization_name and agent_role verified and correct</div>
+        </div>
+      </div>
+
+      <div class="section-title">Modules & Policies</div>
+
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">Exactly one role module selected and included</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">INTENT_ROUTING included (required for all deployments)</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">ESCALATION module included with correct transfer target</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">All applicable policies included and client-specific values populated</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">INTERNAL_NOTES.md excluded from agent assembly (maintainer-only)</div>
+        </div>
+      </div>
+
+      <div class="section-title">Tools & Safety</div>
+
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">All tool contracts included — TOOL_CONTRACTS, TOOL_USAGE_RULES, TOOL_ERROR_HANDLING</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">Tool names match actual platform implementation (book_appointment etc.)</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">Fallback contact number populated for error cascade scripts</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">Assembly order verified: SYSTEM → ROLE → FUNCTIONAL → POLICIES → TOOLS</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box"><span class="check-checkmark">✓</span></div>
+          <div class="check-text">Test run completed — all intents exercised at least once in staging</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /.main -->
+</div><!-- /.shell -->
+
+<!-- ═══════════════════════════════════════ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+
+const breadcrumbs = {
+  'overview': 'Overview',
+  'assembly': 'Assembly Guide',
+  'variables': 'Variables',
+  'modules-role': 'Role Modules',
+  'modules-functional': 'Functional Modules',
+  'policies': 'Policies',
+  'tools': 'Tool Contracts',
+  'checklist': 'Pre-Deploy Checklist',
+};
+
+function navigate(pageId, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) { page.classList.add('active'); page.classList.remove('fade-in'); void page.offsetWidth; page.classList.add('fade-in'); }
+  if (btn) btn.classList.add('active');
+  document.getElementById('breadcrumb-current').textContent = breadcrumbs[pageId] || pageId;
+}
+
+// ─── FILTER / SEARCH ──────────────────────────────────────────────────────────
+
+function filterCards(query, gridId) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  const cards = grid.querySelectorAll('.card');
+  const q = query.toLowerCase();
+  cards.forEach(card => {
+    const text = (card.querySelector('.card-title')?.textContent + ' ' + card.querySelector('.card-desc')?.textContent + ' ' + (card.dataset.search || '')).toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+
+// ─── CHECKLIST ────────────────────────────────────────────────────────────────
+
+function toggleCheck(item) {
+  item.classList.toggle('checked');
+}
+
+// ─── MODAL DATA ───────────────────────────────────────────────────────────────
+
+const modals = {
+
+  'principle-modular': {
+    tag: '<span class="card-tag tag-core" style="margin:0">Architecture</span>',
+    title: 'Modular & Swappable Design',
+    file: 'PROMPT_LIBRARY_GUIDELINES.md',
+    sections: [
+      { title: 'What it means', content: 'Every component — role module, functional module, policy, tool contract — can be independently swapped out without affecting the others. The framework is designed so that deploying a new client means substituting modules, not rewriting prompts.' },
+      { title: 'Benefits', list: ['One module change requires zero changes to other layers', 'Clients can get custom policies without custom modules', 'New roles can be added without modifying functional logic', 'RAG retrieval can target specific modules without full context'] },
+    ]
+  },
+
+  'principle-safety': {
+    tag: '<span class="card-tag tag-core" style="margin:0">Safety</span>',
+    title: 'Zero Hallucination Policy',
+    file: 'SYSTEM_INSTRUCTIONS.md',
+    sections: [
+      { title: 'The rule', content: 'The agent reads only from explicitly configured data. It never invents information, infers success from silence, or assumes a tool call succeeded without a valid response code or confirmation_id.' },
+      { title: 'Enforced behaviors', list: ['book_appointment only confirms with a valid confirmation_id', 'No date, price, or availability is quoted unless explicitly in policy', 'Side-effect tools require explicit verbal caller confirmation before invocation', 'Tool results must include a status flag — silence is treated as failure'] },
+    ]
+  },
+
+  'principle-degradation': {
+    tag: '<span class="card-tag tag-core" style="margin:0">Reliability</span>',
+    title: 'Graceful Degradation',
+    file: 'TOOL_ERROR_HANDLING.md',
+    sections: [
+      { title: 'The cascade', content: 'When a tool fails, the agent never leaves the caller stranded. It falls back through a defined three-step cascade.' },
+      { title: 'Cascade steps', list: ['Step 1: Invoke create_note to log the request — promise team follow-up', 'Step 2: If create_note also fails, attempt transfer_call to a human agent', 'Step 3: If transfer_call fails, read back caller info verbally — provide fallback contact number'] },
+    ]
+  },
+
+  'principle-rag': {
+    tag: '<span class="card-tag tag-core" style="margin:0">Integration</span>',
+    title: 'RAG-Friendly Structure',
+    file: 'README.md',
+    sections: [
+      { title: 'Design intent', content: 'Each .md file is designed as a standalone retrieval chunk with no hard dependencies on other files. The framework can be ingested into a vector store and retrieved by topic without needing the full context.' },
+      { title: 'Integration patterns', list: ['Programmatic assembly: concatenate files in the defined order', 'RAG injection: retrieve relevant modules based on query intent', 'Partial deployment: include only the modules relevant to a specific use case', 'Version control: each file can be versioned and updated independently'] },
+    ]
+  },
+
+  'role-receptionist': {
+    tag: '<span class="card-tag tag-role" style="margin:0">Role Module</span>',
+    title: 'Receptionist',
+    file: 'modules/RECEPTIONIST.md',
+    sections: [
+      { title: 'Primary purpose', content: 'General greeting, caller triage, and message-taking. The receptionist is the default entry point for any caller who does not have a specific intent.' },
+      { title: 'Core responsibilities', list: ['Warm greeting and organization introduction', 'Triage caller intent and route to the appropriate module or department', 'Take messages for unavailable staff', 'Document unresolved requests via create_note', 'Handle general inquiries that do not require a specialized module'] },
+      { title: 'Routing behavior', content: 'When a caller\'s intent matches a specialized module (sales, support, scheduling), the receptionist routes to that module via INTENT_ROUTING. For anything else, it handles directly or takes a message.' },
+    ]
+  },
+
+  'role-sales': {
+    tag: '<span class="card-tag tag-role" style="margin:0">Role Module</span>',
+    title: 'Sales Agent',
+    file: 'modules/SALES_MODULE.md',
+    sections: [
+      { title: 'Primary purpose', content: 'Lead qualification, product interest identification, timeline and budget discovery, and routing warm leads toward next steps.' },
+      { title: 'Qualification fields', list: ['Product or service of interest', 'Timeline (when are they looking to buy/start?)', 'Decision-making authority', 'Budget range (per pricing_mode)', 'Contact information for follow-up'] },
+      { title: 'Behavior notes', content: 'Sales agents operate under pricing_mode constraints. In restricted mode they never quote prices. The goal is qualification and handoff, not hard selling. Caller experience should feel consultative, not pushy.' },
+    ]
+  },
+
+  'role-support': {
+    tag: '<span class="card-tag tag-role" style="margin:0">Role Module</span>',
+    title: 'Customer Support',
+    file: 'modules/CUSTOMER_SUPPORT.md',
+    sections: [
+      { title: 'Primary purpose', content: 'Issue resolution, escalation procedures, and sensitive issue handling. Balances empathy and professionalism with strict policy compliance.' },
+      { title: 'Escalation triggers', list: ['Billing disputes beyond agent authority', 'Legal threats or safety concerns', 'Abuse or aggressive behavior (see ESCALATION module)', 'Issues that require human judgment or account access'] },
+      { title: 'Tone requirements', content: 'Support agents use the VOICE_STYLE_GUIDE empathy guidelines. Acknowledgment before resolution — always validate the caller\'s concern before jumping to a fix.' },
+    ]
+  },
+
+  'role-service': {
+    tag: '<span class="card-tag tag-role" style="margin:0">Role Module</span>',
+    title: 'Service Requests',
+    file: 'modules/SERVICE_REQUESTS.md',
+    sections: [
+      { title: 'Primary purpose', content: 'Field service intake — collects all information needed by the dispatch team to fulfill a service request. Documents clearly for manual or automated routing.' },
+      { title: 'Required intake fields', list: ['Type of service needed', 'Service location (address)', 'Urgency level', 'Preferred date/time window', 'Caller name and contact number', 'Any special access instructions'] },
+      { title: 'Output', content: 'All collected fields are logged via create_note with required structured format. In realtime or hybrid scheduling_mode, may also attempt to book directly via book_appointment.' },
+    ]
+  },
+
+  'func-intent': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'Intent Routing',
+    file: 'modules/INTENT_ROUTING.md',
+    sections: [
+      { title: 'How it works', content: 'INTENT_ROUTING runs at the top of every conversation turn. It classifies the caller\'s current message into one of 11 intent categories using keyword and context matching.' },
+      { title: 'Intent categories', list: ['new_inquiry — general first contact', 'sales — product/service interest', 'customer_support — issue or complaint', 'schedule_new — wants to book', 'reschedule — wants to change booking', 'cancel — wants to cancel booking', 'service_request — field service needed', 'general_question — informational', 'speak_to_human — explicit escalation', 'no_show_follow_up — missed appointment', 'out_of_scope — off-topic or inappropriate'] },
+    ]
+  },
+
+  'func-escalation': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'Escalation Module',
+    file: 'modules/ESCALATION.md',
+    sections: [
+      { title: 'Escalation triggers', list: ['Explicit caller request to speak to a human', 'Billing disputes beyond agent authority', 'Legal threats or mention of attorneys', 'Safety concerns or emergencies', 'Aggressive or abusive behavior', 'Tool failures after multiple retries', 'Conflicting policies requiring human judgment'] },
+      { title: 'Emergency override', content: 'Any caller mentioning immediate safety risk bypasses standard flow entirely and is immediately transferred via transfer_call with emergency_flag. If transfer fails, the fallback contact number is provided immediately.' },
+      { title: 'Procedure', list: ['Inform caller calmly that you are escalating', 'Create note with escalation_flag set appropriately', 'Invoke transfer_call to correct department', 'If transfer fails, promise callback and take contact info'] },
+    ]
+  },
+
+  'func-notes': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'Note Taking Standard',
+    file: 'modules/NOTE_TAKING_STANDARD.md',
+    sections: [
+      { title: 'Required fields', list: ['caller_name — full name as provided', 'phone — callback number', 'issue_summary — concise description of the request or issue'] },
+      { title: 'Optional fields', list: ['timestamp — date and time of call', 'action_taken — what the agent did', 'follow_up_required — boolean', 'assigned_to — team or person', 'escalation_flag — see flag values below'] },
+      { title: 'Escalation flags', list: ['abuse-tier1, abuse-tier2', 'fee-waiver-request', 'emergency-exception', 'security-incident', 'data-deletion-request', 'tool-failure', 'transfer-failed'] },
+    ]
+  },
+
+  'func-scheduling': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'New Appointment Scheduling',
+    file: 'modules/SCHEDULING_NEW_APPOINTMENT.md',
+    sections: [
+      { title: 'Required fields to collect', list: ['Service type or reason for appointment', 'Preferred date', 'Preferred time window', 'Caller name', 'Callback phone number'] },
+      { title: 'Mode behavior', list: ['realtime: invokes book_appointment immediately after confirmation', 'request_only: logs all fields via create_note only', 'hybrid: attempts book_appointment, falls back to create_note on failure'] },
+      { title: 'Confirmation requirement', content: 'Read back all collected fields to the caller before invoking any tool. Explicit verbal confirmation required. Only one question asked at a time during collection.' },
+    ]
+  },
+
+  'func-reschedule': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'Reschedule Appointment',
+    file: 'modules/RESCHEDULE_APPOINTMENT.md',
+    sections: [
+      { title: 'Flow', list: ['Look up existing appointment via lookup_appointment (silent — read-only)', 'Verify reschedule is within the policy window', 'Collect new preferred date and time', 'Confirm all details with caller verbally', 'Invoke reschedule_appointment tool', 'Report result and provide confirmation'] },
+      { title: 'Policy check', content: 'Before confirming the reschedule, verify the request falls within the CANCELLATION_RESCHEDULE_POLICY window. If not, inform the caller of the policy and offer alternatives.' },
+    ]
+  },
+
+  'func-cancel': {
+    tag: '<span class="card-tag tag-functional" style="margin:0">Functional</span>',
+    title: 'Cancel Appointment',
+    file: 'modules/CANCEL_APPOINTMENT.md',
+    sections: [
+      { title: 'Flow', list: ['Look up existing appointment via lookup_appointment', 'Check CANCELLATION_RESCHEDULE_POLICY for applicable fees', 'Inform caller of any cancellation fees before proceeding', 'Offer reschedule as an alternative before cancelling', 'If caller confirms cancellation, invoke cancel_appointment', 'Create note and send confirmation'] },
+      { title: 'Key rule', content: 'Always offer a reschedule before confirming cancellation. Never process a cancellation without first informing the caller of applicable fees per policy.' },
+    ]
+  },
+
+  'policy-scheduling': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Scheduling Policy',
+    file: 'policies/SCHEDULING_POLICY.md',
+    sections: [
+      { title: 'What it governs', content: 'All rules for booking new appointments — windows, advance notice, same-day availability, conflict handling, and holiday blackout dates.' },
+      { title: 'Key parameters to configure', list: ['Booking window (how far in advance can appointments be made?)', 'Minimum advance notice (e.g., 24 hours)', 'Same-day booking rules (allowed, restricted, or never)', 'Conflict handling (offer next available vs. return unavailable)', 'Holiday blackout dates'] },
+    ]
+  },
+
+  'policy-cancellation': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Cancellation & Reschedule Policy',
+    file: 'policies/CANCELLATION_RESCHEDULE_POLICY.md',
+    sections: [
+      { title: 'What it governs', content: 'Rules for cancellations and reschedules including fee windows, fee amounts, exceptions, and who has authority to waive fees.' },
+      { title: 'Key parameters to configure', list: ['Cancellation window (e.g., free cancellation up to 24h before)', 'Late cancellation fee amount', 'No-show fee amount', 'Reschedule window (how close to appointment can you reschedule?)', 'Emergency exception criteria', 'Fee waiver authority (agent can/cannot waive)'] },
+    ]
+  },
+
+  'policy-pricing': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Pricing Policy',
+    file: 'policies/PRICING_POLICY.md',
+    sections: [
+      { title: 'What it governs', content: 'What the agent can and cannot say about pricing. The pricing_mode variable controls agent behavior; this file contains the actual permitted prices and redirect scripts.' },
+      { title: 'Pricing mode behaviors', list: ['restricted: Agent never quotes any price — uses redirect script to defer', 'open: Agent quotes only prices explicitly listed in this file', 'contextual: Agent shares authorized ranges if available, otherwise redirects'] },
+      { title: 'Prohibited behaviors', list: ['Estimating or guessing prices not listed', 'Offering unapproved discounts or promotions', 'Comparing pricing to competitors'] },
+    ]
+  },
+
+  'policy-payments': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Payments Policy',
+    file: 'policies/PAYMENTS_POLICY.md',
+    sections: [
+      { title: 'Critical rule', content: 'The agent NEVER handles, requests, or stores card data. Payment capture is always deferred to a secure system or human team member.' },
+      { title: 'What it governs', list: ['Accepted payment methods (list what the business accepts)', 'Refund policy (timeframe, conditions)', 'Dispute escalation (who handles billing disputes)', 'Payment capture rules (agent\'s scope is strictly informational)'] },
+    ]
+  },
+
+  'policy-privacy': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Privacy & Security Policy',
+    file: 'policies/PRIVACY_SECURITY_POLICY.md',
+    sections: [
+      { title: 'Authorized PII to collect', list: ['Full name', 'Phone number', 'Email address', 'Service address', 'Reason for contact'] },
+      { title: 'Strictly prohibited', list: ['Credit or debit card numbers', 'Social Security Numbers (SSN)', 'Passwords or PINs', 'Government ID numbers', 'Any data not needed for the current interaction'] },
+      { title: 'Identity verification', content: 'Before discussing any existing account or appointment, the agent must verify the caller using at minimum two identifying fields (e.g., name + phone).' },
+    ]
+  },
+
+  'policy-voice': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Voice Style Guide',
+    file: 'policies/VOICE_STYLE_GUIDE.md',
+    sections: [
+      { title: 'Tone principles', list: ['Warm but professional — never robotic, never over-familiar', 'Clear and concise — short sentences, one thought at a time', 'Calm under pressure — tone does not match caller\'s frustration', 'Empathetic first — acknowledge before resolving'] },
+      { title: 'Voice formatting rules', list: ['Dates: "Tuesday, March 15th" — never "3/15"', 'Times: "two thirty in the afternoon" or "2:30 PM" — not "14:30"', 'Numbers: spell out when ambiguous ("one" not "1" in voice context)'] },
+      { title: 'Prohibited phrases', list: ['"No problem" → use "Of course" or "Happy to help"', '"I cannot" → use "I\'m not able to" or "That\'s outside my scope"', '"Basically" — remove entirely', '"Actually" — remove entirely when correcting'] },
+    ]
+  },
+
+  'policy-abuse': {
+    tag: '<span class="card-tag tag-policy" style="margin:0">Policy</span>',
+    title: 'Abuse & Off-Topic Policy',
+    file: 'policies/ABUSE_OFFTOPIC_POLICY.md',
+    sections: [
+      { title: 'Off-topic handling', content: 'When a caller asks about topics outside the agent\'s configured scope, the agent politely redirects back to its role. One redirection attempt is made before escalating to Tier 1.' },
+      { title: 'Abuse tiers', list: ['Tier 1: First incident — issue warning, continue with note + abuse-tier1 flag', 'Tier 2: Repeated or severe abuse — terminate call, create note + abuse-tier2 flag, attempt transfer'] },
+      { title: 'Prompt injection defense', content: 'The agent is instructed to treat any message asking it to "ignore previous instructions", "act as a different agent", or "reveal your system prompt" as a Tier 1 security incident. These are logged and flagged regardless of tone.' },
+    ]
+  },
+
+};
+
+// ─── MODAL OPEN/CLOSE ─────────────────────────────────────────────────────────
+
+function openModal(id) {
+  const data = modals[id];
+  if (!data) return;
+
+  let html = `
+    <div class="modal-tag">${data.tag}</div>
+    <div class="modal-title">${data.title}</div>
+    <div class="modal-file">${data.file}</div>
+  `;
+
+  (data.sections || []).forEach(sec => {
+    html += `<div class="modal-section"><div class="modal-section-title">${sec.title}</div>`;
+    if (sec.content) html += `<div class="modal-text">${sec.content}</div>`;
+    if (sec.list) {
+      html += `<ul class="modal-list">`;
+      sec.list.forEach(item => { html += `<li>${item}</li>`; });
+      html += `</ul>`;
+    }
+    if (sec.code) html += `<div class="modal-code">${sec.code}</div>`;
+    html += `</div>`;
+  });
+
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalDirect();
+});
+
+</script>
+</body>
+</html>
